@@ -1,0 +1,13 @@
+{
+  "name": "almiraal-proxy",
+  "version": "1.0.0",
+  "description": "CORS Proxy for Almiraal Solution",
+  "main": "api/proxy.js",
+  "scripts": {
+    "start": "node api/proxy.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}

@@ -1,36 +1,58 @@
 export default async function handler(req, res) {
-  const endpoint = req.query.endpoint;
+  // Handle OPTIONS for CORS
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
 
-  // If no endpoint is provided, you could fall back to the generic url query or return an error
-  if (!endpoint && !req.query.url) {
-    return res.status(400).json({ error: "Endpoint or URL is required" });
+  const base = "https://al-mirals-backend.vercel.app";
+  let fetchUrl;
+
+  // 1. Check for explicit 'url' or 'endpoint' query parameters
+  if (req.query.url) {
+    fetchUrl = req.query.url;
+  } else if (req.query.endpoint) {
+    fetchUrl = `${base}/${req.query.endpoint}`;
+  } else {
+    // 2. Fallback to path-based routing (for transparent proxy)
+    // req.url contains the path and query string
+    const path = req.url === '/' ? '' : req.url;
+    fetchUrl = `${base}${path}`;
   }
 
   try {
-    let fetchUrl = req.query.url;
-    
-    // Use the bonus feature if endpoint is provided
-    if (endpoint) {
-      const base = "https://al-mirals-backend.vercel.app";
-      fetchUrl = `${base}/${endpoint}`;
+    const options = {
+      method: req.method,
+      headers: {
+        'Content-Type': req.headers['content-type'] || 'application/json',
+      },
+    };
+
+    // Forward body for non-GET requests
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
+      options.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     }
 
-    const response = await fetch(fetchUrl);
-    
-    // Use .json() if we know it's json, otherwise .text()
-    // To be safe and support both approaches, we can check the content type
+    const response = await fetch(fetchUrl, options);
     const contentType = response.headers.get("content-type");
-    let data;
+    
+    // Set CORS headers (also handled by vercel.json, but good for redundancy)
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
+
     if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.status(200).json(data);
+      const data = await response.json();
+      res.status(response.status).json(data);
     } else {
-      data = await response.text();
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.status(200).send(data);
+      const data = await response.text();
+      res.status(response.status).send(data);
     }
   } catch (error) {
-    res.status(500).json({ error: "Proxy failed", details: error.message });
+    console.error("Proxy error:", error);
+    res.status(500).json({ 
+      error: "Proxy failed", 
+      details: error.message,
+      target: fetchUrl 
+    });
   }
 }
