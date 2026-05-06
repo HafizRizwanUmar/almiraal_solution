@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const base = "https://al-mirals-backend.vercel.app";
+  const base = "https://al-miral-backend-5yrh.vercel.app/";
   let fetchUrl;
 
   // 1. Check for explicit 'url' or 'endpoint' query parameters
