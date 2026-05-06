@@ -95,12 +95,15 @@ module.exports = async (req, res) => {
     console.log('Product added successfully:', newProduct._id);
     res.status(201).json({ message: 'Product added successfully', product: newProduct });
   } catch (err) {
-    console.error('Add item error details:', err);
+    console.error('CRITICAL ERROR in add-item:', err);
     res.status(500).json({ 
-      message: 'Server error', 
-      error: err.message,
-      stack: err.stack,
-      bodyReceived: req.body // Send back the body to see what we got
+      status: 'CRITICAL_FAILURE',
+      message: 'A system error occurred', 
+      errorMessage: err.message,
+      errorStack: err.stack,
+      dbStatus: mongoose.connection.readyState, // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+      mongoUriSet: !!process.env.MONGO_URI,
+      receivedBody: req.body
     });
   }
 };
