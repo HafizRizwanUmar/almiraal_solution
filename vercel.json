@@ -12,6 +12,9 @@
     }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/api/index" }
+    { "source": "/", "destination": "/api/index" },
+    { "source": "/api/products/get-product", "destination": "/api/products/get-product" },
+    { "source": "/api/blogs", "destination": "/api/blogs" },
+    { "source": "/api/caps", "destination": "/api/caps" }
   ]
 }
