@@ -1,7 +1,7 @@
 const connectDB = require('../lib/db');
 const Product = require('../models/Product');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -17,8 +17,6 @@ export default async function handler(req, res) {
   try {
     await connectDB();
     
-    // The frontend might send data in different structures. 
-    // We'll try to map common names to our model.
     const { 
       name, 
       productName, 
@@ -60,4 +58,4 @@ export default async function handler(req, res) {
     console.error('Add item error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
-}
+};

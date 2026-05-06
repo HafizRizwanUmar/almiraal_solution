@@ -1,10 +1,10 @@
-import { connectDB } from '../../lib/db.js';
-import User from '../../models/User.js';
-import Product from '../../models/Product.js';
-import Blog from '../../models/Blog.js';
-import Cap from '../../models/Cap.js';
+const connectDB = require('../../lib/db');
+const User = require('../../models/User');
+const Product = require('../../models/Product');
+const Blog = require('../../models/Blog');
+const Cap = require('../../models/Cap');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   console.log('Seed request received');
@@ -84,4 +84,4 @@ export default async function handler(req, res) {
     console.error('Seed error details:', err);
     res.status(500).json({ message: err.message });
   }
-}
+};

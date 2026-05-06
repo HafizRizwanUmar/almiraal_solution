@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
-import { connectDB } from '../../lib/db.js';
-import User from '../../models/User.js';
+const jwt = require('jsonwebtoken');
+const connectDB = require('../../lib/db');
+const User = require('../../models/User');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -60,4 +60,4 @@ export default async function handler(req, res) {
       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined 
     });
   }
-}
+};
