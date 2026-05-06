@@ -1,9 +1,10 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-const capSchema = new mongoose.Schema({
+const CapSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String },
   image: { type: String },
-}, { timestamps: true });
+  createdAt: { type: Date, default: Date.now }
+});
 
-export default mongoose.models.Cap || mongoose.model('Cap', capSchema);
+module.exports = mongoose.models.Cap || mongoose.model('Cap', CapSchema);
