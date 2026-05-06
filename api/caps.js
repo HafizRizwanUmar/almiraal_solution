@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     const caps = await Cap.find({}).sort({ createdAt: -1 });
     res.status(200).json(caps);
   } catch (err) {
-    console.error('Fetch caps error:', err);
+    console.error('Fetch caps error details:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };

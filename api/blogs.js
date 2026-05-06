@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     const blogs = await Blog.find({}).sort({ createdAt: -1 });
     res.status(200).json(blogs);
   } catch (err) {
-    console.error('Fetch blogs error:', err);
+    console.error('Fetch blogs error details:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };

@@ -17,6 +17,11 @@ module.exports = async (req, res) => {
   try {
     await connectDB();
     
+    if (!req.body) {
+      console.error('Request body is missing');
+      return res.status(400).json({ message: 'Request body is required' });
+    }
+
     const { 
       name, 
       productName, 
@@ -33,6 +38,14 @@ module.exports = async (req, res) => {
       hoverImage, 
       pdf 
     } = req.body;
+
+    if (!name && !productName) {
+      return res.status(400).json({ message: 'Product name is required' });
+    }
+
+    if (!category) {
+      return res.status(400).json({ message: 'Category is required' });
+    }
 
     const newProduct = new Product({
       name: name || productName,
@@ -53,9 +66,14 @@ module.exports = async (req, res) => {
     });
 
     await newProduct.save();
+    console.log('Product added successfully:', newProduct._id);
     res.status(201).json({ message: 'Product added successfully', product: newProduct });
   } catch (err) {
-    console.error('Add item error:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error('Add item error details:', err);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: err.message,
+      details: err.errors // Include Mongoose validation errors if any
+    });
   }
 };
