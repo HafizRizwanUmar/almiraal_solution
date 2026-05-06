@@ -1,5 +1,7 @@
 import { connectDB } from '../../lib/db.js';
 import User from '../../models/User.js';
+import Product from '../../models/Product.js';
+import Blog from '../../models/Blog.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,22 +22,51 @@ export default async function handler(req, res) {
   try {
     await connectDB();
 
-    const existing = await User.findOne({ role: 'admin' });
-    if (existing) {
-      console.log('Admin already exists:', existing.email);
-      return res.status(200).json({ message: 'Admin already exists', email: existing.email });
+    // 1. Seed Admin
+    let admin = await User.findOne({ role: 'admin' });
+    if (!admin) {
+      const { email, password } = req.body || {};
+      admin = await User.create({
+        email: email || 'admin@almiraal.com',
+        password: password || 'Admin@123',
+        name: 'Admin',
+        role: 'admin',
+      });
+      console.log('Admin created');
     }
 
-    const { email, password } = req.body || {};
-    const admin = await User.create({
-      email: email || 'admin@almiraal.com',
-      password: password || 'Admin@123',
-      name: 'Admin',
-      role: 'admin',
-    });
+    // 2. Seed Sample Product if none exist
+    const productCount = await Product.countDocuments();
+    if (productCount === 0) {
+      await Product.create({
+        name: 'Sample Product',
+        description: 'First sample product from backend',
+        price: 99.99,
+        category: 'Sample',
+        images: ['https://via.placeholder.com/150'],
+        stock: 10
+      });
+      console.log('Sample product created');
+    }
 
-    console.log('Admin created successfully:', admin.email);
-    res.status(201).json({ message: 'Admin created', email: admin.email });
+    // 3. Seed Sample Blog if none exist
+    const blogCount = await Blog.countDocuments();
+    if (blogCount === 0) {
+      await Blog.create({
+        title: 'Welcome to Almiraal',
+        content: 'This is your first blog post from the new backend.',
+        author: 'Admin',
+        image: 'https://via.placeholder.com/300'
+      });
+      console.log('Sample blog created');
+    }
+
+    res.status(201).json({ 
+      message: 'Database seeded successfully', 
+      admin: admin.email,
+      products: productCount === 0 ? 1 : productCount,
+      blogs: blogCount === 0 ? 1 : blogCount
+    });
   } catch (err) {
     console.error('Seed error details:', err);
     res.status(500).json({ message: err.message });
