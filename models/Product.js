@@ -1,12 +1,22 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-const productSchema = new mongoose.Schema({
+const ProductSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  category: { type: String, required: true },
+  filter: { type: String },
   description: { type: String },
-  price: { type: Number, required: true },
-  category: { type: String },
-  images: [{ type: String }],
-  stock: { type: Number, default: 0 },
-}, { timestamps: true });
+  specifications: {
+    brimfulCapacity: { type: String },
+    capacity: { type: String },
+    weight: { type: String },
+    height: { type: String },
+    width: { type: String },
+    depth: { type: String }
+  },
+  image: { type: String },
+  hoverImage: { type: String },
+  pdf: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
 
-export default mongoose.models.Product || mongoose.model('Product', productSchema);
+module.exports = mongoose.models.Product || mongoose.model('Product', ProductSchema);
