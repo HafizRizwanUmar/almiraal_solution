@@ -2,6 +2,7 @@ import { connectDB } from '../../lib/db.js';
 import User from '../../models/User.js';
 import Product from '../../models/Product.js';
 import Blog from '../../models/Blog.js';
+import Cap from '../../models/Cap.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -61,11 +62,23 @@ export default async function handler(req, res) {
       console.log('Sample blog created');
     }
 
+    // 4. Seed Sample Cap if none exist
+    const capCount = await Cap.countDocuments();
+    if (capCount === 0) {
+      await Cap.create({
+        name: 'Sample Cap',
+        description: 'First sample cap from backend',
+        image: 'https://via.placeholder.com/150'
+      });
+      console.log('Sample cap created');
+    }
+
     res.status(201).json({ 
       message: 'Database seeded successfully', 
       admin: admin.email,
       products: productCount === 0 ? 1 : productCount,
-      blogs: blogCount === 0 ? 1 : blogCount
+      blogs: blogCount === 0 ? 1 : blogCount,
+      caps: capCount === 0 ? 1 : capCount
     });
   } catch (err) {
     console.error('Seed error details:', err);
