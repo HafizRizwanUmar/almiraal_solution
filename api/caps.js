@@ -12,9 +12,9 @@ export default async function handler(req, res) {
   try {
     await connectDB();
     const caps = await Cap.find({}).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, caps });
+    res.status(200).json(caps);
   } catch (err) {
     console.error('Fetch caps error:', err);
-    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 }
