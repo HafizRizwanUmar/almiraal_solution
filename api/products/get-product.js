@@ -3,7 +3,7 @@ const Product = require('../../models/Product');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -11,8 +11,48 @@ module.exports = async (req, res) => {
 
   try {
     await connectDB();
-    const products = await Product.find({}).sort({ createdAt: -1 });
-    res.status(200).json(products);
+
+    const { page = 1, limit = 20, searchName = '', searchCategory = '', sortByDate = 'desc' } = req.query || {};
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+
+    // Build filter
+    const filter = {};
+    if (searchName) filter.name = { $regex: searchName, $options: 'i' };
+    if (searchCategory) filter.category = { $regex: searchCategory, $options: 'i' };
+
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / limitNum);
+
+    const products = await Product.find(filter)
+      .sort({ createdAt: sortByDate === 'asc' ? 1 : -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .lean();
+
+    // Dashboard table expects: src (image), _name (name), category, value, status, _id
+    const mapped = products.map(p => ({
+      ...p,
+      _name: p.name,
+      src: p.image || '',
+      imageUrl: p.image || '',
+      hoverImageUrl: p.hoverImage || p.image || '',
+      value: p.filter || p.specifications?.capacity || '',
+      status: 'Active',
+    }));
+
+    // Dashboard expects: res.data.data.products and res.data.data.pagination
+    res.status(200).json({
+      data: {
+        products: mapped,
+        pagination: {
+          totalProducts,
+          totalPages,
+          currentPage: pageNum,
+          limit: limitNum,
+        }
+      }
+    });
   } catch (err) {
     console.error('Fetch products error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });

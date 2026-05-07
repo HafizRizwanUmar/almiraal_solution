@@ -27,10 +27,12 @@ module.exports = async (req, res) => {
           chunks.push(chunk);
         }
         const buffer = Buffer.concat(chunks);
-        const rawBody = buffer.toString();
-        if (rawBody) {
+        const rawBody = buffer.toString().trim();
+        if (rawBody && (rawBody.startsWith('{') || rawBody.startsWith('['))) {
           req.body = JSON.parse(rawBody);
           console.log('Manually parsed body:', req.body);
+        } else {
+          console.log('Body is not JSON, skipping parse.');
         }
       } catch (parseErr) {
         console.error('Manual parse failed:', parseErr.message);
@@ -57,6 +59,7 @@ module.exports = async (req, res) => {
     const name = getVal(['name', 'productName', 'Product Name', 'productname', 'Productname']);
     const category = getVal(['category', 'Category']);
     const filter = getVal(['filter', 'Filter']);
+    const page = getVal(['page', 'Page']) || 'product';
     const description = getVal(['description', 'Description']);
     const brimfulCapacity = getVal(['brimfulCapacity', 'Brimful Capacity', 'brimfulcapacity']);
     const capacity = getVal(['capacity', 'Capacity']);
@@ -64,20 +67,59 @@ module.exports = async (req, res) => {
     const height = getVal(['height', 'Height']);
     const width = getVal(['width', 'Width']);
     const depth = getVal(['depth', 'Depth']);
-    const image = getVal(['image', 'Image', 'productImage']);
-    const hoverImage = getVal(['hoverImage', 'Hover Image', 'hoverimage']);
-    const pdf = getVal(['pdf', 'PDF', 'Pdf']);
 
-    // THE HACK: If name or category are missing, use defaults instead of failing
+    // Clean helper: treat "null"/"undefined" strings as missing
+    const clean = v => (!v || v === 'null' || v === 'undefined') ? '' : v;
+
+    let image = clean(getVal(['image', 'Image', 'productImage']));
+    let hoverImage = clean(getVal(['hoverImage', 'Hover Image', 'hoverimage']));
+    const pdf = clean(getVal(['pdf', 'PDF', 'Pdf']));
+
+    // Handle base64 data URL images (if frontend converts before sending)
+    const { uploadBase64 } = require('../lib/cloudinary');
+    
+    async function saveBase64(dataUrl, folderName) {
+      if (!dataUrl || !dataUrl.startsWith('data:')) return dataUrl;
+      try {
+        const result = await uploadBase64(dataUrl, { folder: folderName });
+        return result.secure_url;
+      } catch (e) {
+        console.error('Cloudinary upload error:', e);
+        return '';
+      }
+    }
+
+    if (image && image.startsWith('data:')) image = await saveBase64(image, 'items');
+    if (hoverImage && hoverImage.startsWith('data:')) hoverImage = await saveBase64(hoverImage, 'items');
+
+    // Mapping categories to labels (what the dashboard sends)
+    const categoryMapping = {
+      'serum-bottle': 'SerumBottles',
+      'perfume-bottle': 'PerfumeBottles',
+      'cream-jar': 'CreamJars',
+      'diffuser-bottle': 'DiffuserBottles',
+      'testers-bottle': 'TestersBottle',
+      'pumps-and-collars': 'PumpsandCollars'
+    };
+
     const finalName = name || 'Unnamed Product ' + Date.now();
-    const finalCategory = category || 'General';
+    let finalCategory = category || 'General';
+    // If it's already a label, keep it. If it's a slug, map it.
+    if (categoryMapping[finalCategory]) {
+      finalCategory = categoryMapping[finalCategory];
+    }
+    
+    // Image path comes from the multipart parser which saves uploaded files to /uploads/
+    // If no image was uploaded, use empty string (not a placeholder)
+    const finalImage = image || '';
 
-    console.log('Attempting to save product:', { name: finalName, category: finalCategory });
+    console.log('Attempting to save product:', { name: finalName, category: finalCategory, image: finalImage });
 
     const newProduct = new Product({
       name: finalName,
       category: finalCategory,
-      filter,
+      filter: filter || 'all',
+      page,
       description,
       specifications: {
         brimfulCapacity,
@@ -87,8 +129,8 @@ module.exports = async (req, res) => {
         width,
         depth
       },
-      image,
-      hoverImage,
+      image: finalImage,
+      hoverImage: hoverImage || finalImage,
       pdf
     });
 

@@ -4,6 +4,7 @@ const ProductSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { type: String, required: true },
   filter: { type: String },
+  page: { type: String, default: 'product' },
   description: { type: String },
   specifications: {
     brimfulCapacity: { type: String },

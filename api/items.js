@@ -12,8 +12,21 @@ module.exports = async (req, res) => {
 
   try {
     await connectDB();
-    const products = await Product.find({}).sort({ createdAt: -1 });
-    res.status(200).json(products);
+    const { category } = req.query || {};
+    const filter = {};
+    if (category) filter.category = category;
+
+    const products = await Product.find(filter).sort({ createdAt: -1 }).lean();
+
+    // Map DB fields to what the frontend expects:
+    // Products page uses: imageUrl, hoverImageUrl, name, _id
+    const mapped = products.map(p => ({
+      ...p,
+      imageUrl: p.image || '',
+      hoverImageUrl: p.hoverImage || p.image || '',
+    }));
+
+    res.status(200).json(mapped);
   } catch (err) {
     console.error('Fetch items error details:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
