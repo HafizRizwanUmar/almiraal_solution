@@ -132,6 +132,7 @@ module.exports = async (req, res) => {
 
     const newProduct = new Product({
       name: finalName,
+      slug: finalName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 7),
       category: finalCategory,
       filter: filter || 'all',
       page,
