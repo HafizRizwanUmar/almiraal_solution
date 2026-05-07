@@ -19,20 +19,35 @@ module.exports = async (req, res) => {
     await connectDB();
     
     // Manually parse body if Vercel doesn't do it automatically (fallback)
-    if (!req.body || Object.keys(req.body).length === 0) {
-      console.log('req.body is empty, attempting manual parse...');
+    if (!req.body || Buffer.isBuffer(req.body) || Object.keys(req.body).length === 0) {
+      console.log('Attempting manual body parse...');
       try {
-        const chunks = [];
-        for await (const chunk of req) {
-          chunks.push(chunk);
-        }
-        const buffer = Buffer.concat(chunks);
-        const rawBody = buffer.toString().trim();
-        if (rawBody && (rawBody.startsWith('{') || rawBody.startsWith('['))) {
-          req.body = JSON.parse(rawBody);
-          console.log('Manually parsed body:', req.body);
+        let buffer;
+        if (Buffer.isBuffer(req.body)) {
+          buffer = req.body;
         } else {
-          console.log('Body is not JSON, skipping parse.');
+          const chunks = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          buffer = Buffer.concat(chunks);
+        }
+        
+        const contentType = req.headers['content-type'] || '';
+        if (contentType.includes('multipart/form-data')) {
+          const boundaryMatch = contentType.match(/boundary=(.+)$/);
+          const boundary = boundaryMatch ? boundaryMatch[1].trim() : '';
+          if (boundary) {
+            const { parseMultipart } = require('../lib/multipart');
+            const { fields } = parseMultipart(buffer, boundary);
+            req.body = fields;
+            console.log('Manually parsed multipart body');
+          }
+        } else {
+          const rawBody = buffer.toString().trim();
+          if (rawBody && (rawBody.startsWith('{') || rawBody.startsWith('['))) {
+            req.body = JSON.parse(rawBody);
+          }
         }
       } catch (parseErr) {
         console.error('Manual parse failed:', parseErr.message);
