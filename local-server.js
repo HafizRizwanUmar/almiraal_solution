@@ -186,7 +186,7 @@ const server = http.createServer(async (req, res) => {
     apiPath = './api/auth/' + pathname.split('/').pop() + '.js';
   } else if (pathname.startsWith('/api/')) {
     apiPath = '.' + pathname + '.js';
-  } else if (pathname === '/sendemail') {
+  } else if (pathname === '/sendemail' || pathname === '/api/products/send-mail' || pathname === '/api/products/send-mail-connect') {
     apiPath = './api/sendemail.js';
   }
 
