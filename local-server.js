@@ -238,16 +238,17 @@ const server = http.createServer(async (req, res) => {
                 if (boundary) {
                   const { fields, files } = parseMultipart(bodyBuffer, boundary);
 
-                  // Save any uploaded files and replace with their paths
-                  const savedPaths = {};
+                  // Convert uploaded files to base64 data URLs so API handlers
+                  // can upload them to Cloudinary (same flow as Vercel production).
+                  const base64Fields = {};
                   for (const [fieldName, file] of Object.entries(files)) {
                     if (file.data && file.data.length > 0) {
-                      savedPaths[fieldName] = saveUploadedFile(file);
-                      console.log(`Saved upload: ${fieldName} -> ${savedPaths[fieldName]}`);
+                      base64Fields[fieldName] = `data:${file.contentType};base64,${file.data.toString('base64')}`;
+                      console.log(`Converted upload to base64: ${fieldName} (${file.data.length} bytes)`);
                     }
                   }
 
-                  req.body = { ...fields, ...savedPaths };
+                  req.body = { ...fields, ...base64Fields };
                   console.log('Parsed multipart fields:', Object.keys(req.body));
                 } else {
                   req.body = {};
