@@ -18,12 +18,16 @@ module.exports = async (req, res) => {
 
     const products = await Product.find(filter).sort({ createdAt: -1 }).lean();
 
-    // Map DB fields to what the frontend expects:
     // Products page uses: imageUrl, hoverImageUrl, name, _id
+    // Old Dashboard uses: src, _name, value, status
     const mapped = products.map(p => ({
       ...p,
       imageUrl: p.image || '',
       hoverImageUrl: p.hoverImage || p.image || '',
+      src: p.image || '',
+      _name: p.name || '',
+      value: p.filter || '',
+      status: 'Active',
     }));
 
     res.status(200).json(mapped);

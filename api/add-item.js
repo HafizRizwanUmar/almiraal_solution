@@ -39,9 +39,17 @@ module.exports = async (req, res) => {
           const boundary = boundaryMatch ? boundaryMatch[1].trim() : '';
           if (boundary) {
             const { parseMultipart } = require('../lib/multipart');
-            const { fields } = parseMultipart(buffer, boundary);
-            req.body = fields;
-            console.log('Manually parsed multipart body');
+            const { fields, files } = parseMultipart(buffer, boundary);
+            req.body = fields || {};
+            // Convert any uploaded files to base64 data URIs so the rest of the code can upload them to Cloudinary
+            if (files) {
+              for (const [key, file] of Object.entries(files)) {
+                if (file.data && file.data.length > 0) {
+                  req.body[key] = `data:${file.contentType};base64,${file.data.toString('base64')}`;
+                }
+              }
+            }
+            console.log('Manually parsed multipart body with files:', Object.keys(files || {}));
           }
         } else {
           const rawBody = buffer.toString().trim();
@@ -86,7 +94,7 @@ module.exports = async (req, res) => {
     // Clean helper: treat "null"/"undefined" strings as missing
     const clean = v => (!v || v === 'null' || v === 'undefined') ? '' : v;
 
-    let image = clean(getVal(['image', 'Image', 'productImage']));
+    let image = clean(getVal(['image', 'Image', 'productImage', 'file']));
     let hoverImage = clean(getVal(['hoverImage', 'Hover Image', 'hoverimage']));
     const pdf = clean(getVal(['pdf', 'PDF', 'Pdf']));
 
@@ -130,9 +138,14 @@ module.exports = async (req, res) => {
 
     console.log('Attempting to save product:', { name: finalName, category: finalCategory, image: finalImage });
 
+    const baseSlug = finalName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const finalSlug = (req.body && req.body.slug && req.body.slug !== 'undefined' && req.body.slug !== 'null') 
+      ? req.body.slug 
+      : baseSlug + '-' + Math.random().toString(36).substring(2, 7);
+
     const newProduct = new Product({
       name: finalName,
-      slug: finalName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 7),
+      slug: finalSlug,
       category: finalCategory,
       filter: filter || 'all',
       page,

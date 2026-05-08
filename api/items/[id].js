@@ -21,10 +21,14 @@ module.exports = async (req, res) => {
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
       product = await Product.findById(id).lean();
     } else {
-      // It's a slug, e.g., "luxury-glass-perfume-bottle"
-      // Convert slug back to search regex by replacing hyphens with wildcard matches
-      const searchRegex = id.replace(/-/g, '.*');
-      product = await Product.findOne({ name: { $regex: new RegExp(searchRegex, 'i') } }).lean();
+      // Look up by the actual slug field
+      product = await Product.findOne({ slug: id }).lean();
+      
+      // Fallback: If not found by slug, try regex name match (legacy support)
+      if (!product) {
+        const searchRegex = id.replace(/-/g, '.*');
+        product = await Product.findOne({ name: { $regex: new RegExp(searchRegex, 'i') } }).lean();
+      }
     }
 
     if (!product) return res.status(404).json({ message: 'Product not found' });

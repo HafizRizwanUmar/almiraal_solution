@@ -23,8 +23,8 @@
     { "source": "/items/:id", "destination": "/api/items/[id]" },
     { "source": "/api/products/send-mail", "destination": "/api/sendemail" },
     { "source": "/api/products/send-mail-connect", "destination": "/api/sendemail" },
-    { "source": "/api/products/update-product/:id", "destination": "/api/products/update-product" },
+    { "source": "/api/products/update-product/:id", "destination": "/api/products/update-product?id=:id" },
     { "source": "/api/products/add-product", "destination": "/api/add-item" },
-    { "source": "/api/products/product/:id", "destination": "/api/items/delete" }
+    { "source": "/api/products/product/:id", "destination": "/api/items/delete?id=:id" }
   ]
 }

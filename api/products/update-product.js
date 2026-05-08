@@ -51,9 +51,16 @@ module.exports = async (req, res) => {
           const boundary = boundaryMatch ? boundaryMatch[1].trim() : '';
           if (boundary) {
             const { parseMultipart } = require('../../lib/multipart');
-            const { fields } = parseMultipart(buffer, boundary);
-            body = fields;
-            console.log('Manually parsed multipart body');
+            const { fields, files } = parseMultipart(buffer, boundary);
+            body = fields || {};
+            if (files) {
+              for (const [key, file] of Object.entries(files)) {
+                if (file.data && file.data.length > 0) {
+                  body[key] = `data:${file.contentType};base64,${file.data.toString('base64')}`;
+                }
+              }
+            }
+            console.log('Manually parsed multipart body with files:', Object.keys(files || {}));
           }
         } else {
           const rawBody = buffer.toString().trim();
@@ -88,7 +95,7 @@ module.exports = async (req, res) => {
     }
 
     // Handle image: `src` field is sent as base64 data URL OR as a saved path from binary upload
-    const srcField = body.src || body.image;
+    const srcField = body.src || body.image || body.file;
     if (srcField && srcField !== 'null' && srcField !== 'undefined') {
       let imagePath = null;
 
