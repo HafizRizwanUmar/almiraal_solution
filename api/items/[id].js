@@ -3,7 +3,7 @@ const Product = require('../../models/Product');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, DELETE, PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -16,6 +16,10 @@ module.exports = async (req, res) => {
 
   if (req.method === 'DELETE') {
     return require('./delete')(req, res);
+  }
+
+  if (req.method === 'PUT') {
+    return require('../products/update-product')(req, res);
   }
 
   if (req.method !== 'GET') return res.status(405).json({ message: 'Method not allowed' });
