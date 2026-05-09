@@ -33,6 +33,7 @@ module.exports = async (req, res) => {
     // Dashboard table expects: src (image), _name (name), category, value, status, _id
     const mapped = products.map(p => ({
       ...p,
+      id: p._id ? p._id.toString() : p.slug, // Make sure `id` is available
       _name: p.name,
       src: p.image || '',
       imageUrl: p.image || '',
