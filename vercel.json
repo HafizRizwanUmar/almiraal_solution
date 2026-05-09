@@ -17,6 +17,7 @@
     { "source": "/add-item", "destination": "/api/add-item" },
     { "source": "/api/products/get-product", "destination": "/api/products/get-product" },
     { "source": "/api/blogs", "destination": "/api/blogs" },
+    { "source": "/api/blogs/:id", "destination": "/api/blogs/[id]" },
     { "source": "/api/caps", "destination": "/api/caps" },
     { "source": "/api/auth/:path*", "destination": "/api/auth/:path*" },
     { "source": "/sendemail", "destination": "/api/sendemail" },
