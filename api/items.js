@@ -33,6 +33,7 @@ module.exports = async (req, res) => {
         specifications: specStr,
         imageUrl: p.image || '',
         hoverImageUrl: p.hoverImage || p.image || '',
+        pdfUrl: p.pdf || '',
         src: p.image || '',
         _name: p.name || '',
         value: p.filter || '',

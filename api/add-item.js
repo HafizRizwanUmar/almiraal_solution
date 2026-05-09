@@ -114,6 +114,17 @@ module.exports = async (req, res) => {
 
     if (image && image.startsWith('data:')) image = await saveBase64(image, 'items');
     if (hoverImage && hoverImage.startsWith('data:')) hoverImage = await saveBase64(hoverImage, 'items');
+    
+    let finalPdf = pdf;
+    if (finalPdf && finalPdf.startsWith('data:')) {
+      try {
+        const result = await uploadBase64(finalPdf, { folder: 'items', resource_type: 'auto' });
+        finalPdf = result.secure_url;
+      } catch (e) {
+        console.error('Cloudinary PDF upload error:', e);
+        finalPdf = '';
+      }
+    }
 
     // Mapping categories to labels (what the dashboard sends)
     const categoryMapping = {
@@ -160,7 +171,7 @@ module.exports = async (req, res) => {
       },
       image: finalImage,
       hoverImage: hoverImage || finalImage,
-      pdf
+      pdf: finalPdf
     });
 
     await newProduct.save();

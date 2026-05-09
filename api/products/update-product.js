@@ -114,6 +114,20 @@ module.exports = async (req, res) => {
       }
     }
 
+    const pdfField = body.pdf || body.Pdf || body.PDF;
+    if (pdfField && pdfField !== 'null' && pdfField !== 'undefined') {
+      if (pdfField.startsWith('data:')) {
+        try {
+          const result = await uploadBase64(pdfField, { folder: 'items', resource_type: 'auto' });
+          updateData.pdf = result.secure_url;
+        } catch (e) {
+          console.error('Cloudinary PDF update error:', e);
+        }
+      } else if (pdfField.startsWith('/')) {
+        updateData.pdf = pdfField;
+      }
+    }
+
     const updated = await Product.findByIdAndUpdate(
       id,
       { $set: updateData },

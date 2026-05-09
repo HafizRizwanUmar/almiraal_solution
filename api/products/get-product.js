@@ -47,6 +47,7 @@ module.exports = async (req, res) => {
         src: p.image || '',
         imageUrl: p.image || '',
         hoverImageUrl: p.hoverImage || p.image || '',
+        pdfUrl: p.pdf || '',
         value: p.filter || (p.specifications && typeof p.specifications === 'object' ? p.specifications.capacity : '') || '',
         status: 'Active',
       };
