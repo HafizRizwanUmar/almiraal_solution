@@ -31,16 +31,26 @@ module.exports = async (req, res) => {
       .lean();
 
     // Dashboard table expects: src (image), _name (name), category, value, status, _id
-    const mapped = products.map(p => ({
-      ...p,
-      id: p._id ? p._id.toString() : p.slug, // Make sure `id` is available
-      _name: p.name,
-      src: p.image || '',
-      imageUrl: p.image || '',
-      hoverImageUrl: p.hoverImage || p.image || '',
-      value: p.filter || p.specifications?.capacity || '',
-      status: 'Active',
-    }));
+    const mapped = products.map(p => {
+      let specStr = p.specifications;
+      if (specStr === 'undefined' || specStr === 'null' || !specStr) {
+        specStr = '[]';
+      } else if (typeof specStr === 'object') {
+        specStr = JSON.stringify(specStr);
+      }
+      
+      return {
+        ...p,
+        specifications: specStr,
+        id: p._id ? p._id.toString() : p.slug, // Make sure `id` is available
+        _name: p.name,
+        src: p.image || '',
+        imageUrl: p.image || '',
+        hoverImageUrl: p.hoverImage || p.image || '',
+        value: p.filter || (p.specifications && typeof p.specifications === 'object' ? p.specifications.capacity : '') || '',
+        status: 'Active',
+      };
+    });
 
     // Dashboard expects: res.data.data.products and res.data.data.pagination
     res.status(200).json({
