@@ -12,14 +12,33 @@ module.exports = async (req, res) => {
   try {
     await connectDB();
 
-    const { page = 1, limit = 20, searchName = '', searchCategory = '', sortByDate = 'desc' } = req.query || {};
-    const pageNum = parseInt(page) || 1;
+    const { page = 1, limit = 20, searchName = '', searchCategory = '', sortByDate = 'desc', pageType } = req.query || {};
+    
+    let pageNum = 1;
+    let pageFilter = pageType || null;
+    
+    if (page && isNaN(parseInt(page))) {
+      // If page is a string like 'customize' or 'product', use it as a filter
+      pageFilter = page;
+    } else {
+      pageNum = parseInt(page) || 1;
+    }
+    
     const limitNum = parseInt(limit) || 20;
 
     // Build filter
     const filter = {};
     if (searchName) filter.name = { $regex: searchName, $options: 'i' };
-    if (searchCategory) filter.category = { $regex: searchCategory, $options: 'i' };
+    
+    // Ignore 'All Categories' or empty string
+    if (searchCategory && searchCategory !== 'All Categories' && searchCategory !== 'all') {
+      filter.category = { $regex: searchCategory, $options: 'i' };
+    }
+    
+    // Filter by page field if applicable
+    if (pageFilter) {
+      filter.page = pageFilter;
+    }
 
     const totalProducts = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalProducts / limitNum);

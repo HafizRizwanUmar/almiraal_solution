@@ -18,6 +18,19 @@ const ProductSchema = new mongoose.Schema({
   image: { type: String },
   hoverImage: { type: String },
   pdf: { type: String },
+  
+  // Dashboard fields
+  src: { type: String },
+  _name: { type: String },
+  status: { type: String, default: 'Active' },
+  value: { type: Number, default: 0 },
+  id: { type: String },
+  method: { type: String, default: null },
+  shape: { type: String, default: null },
+  type: { type: String, default: null },
+  material: { type: String, default: null },
+  color: { type: String, default: null },
+
   createdAt: { type: Date, default: Date.now }
 });
 

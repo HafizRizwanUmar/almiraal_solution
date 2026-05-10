@@ -28,15 +28,21 @@ module.exports = async (req, res) => {
         specStr = JSON.stringify(specStr);
       }
       
+      // Support both field names:
+      // - bulk-uploaded products use: image, hoverImage  (models/Product.js)
+      // - dashboard-added products use: src              (backend/models/Product.js)
+      const imageUrl      = p.image || p.src || '';
+      const hoverImageUrl = p.hoverImage || p.image || p.src || '';
+
       return {
         ...p,
         specifications: specStr,
-        imageUrl: p.image || '',
-        hoverImageUrl: p.hoverImage || p.image || '',
+        imageUrl,
+        hoverImageUrl,
         pdfUrl: p.pdf || '',
-        src: p.image || '',
-        _name: p.name || '',
-        value: p.filter || '',
+        src: imageUrl,
+        _name: p.name || p._name || '',
+        value: p.filter || p.value || '',
         status: 'Active',
       };
     });
